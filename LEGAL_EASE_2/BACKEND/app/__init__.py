@@ -1,0 +1,1 @@
+"""LexiChain FastAPI application package."""

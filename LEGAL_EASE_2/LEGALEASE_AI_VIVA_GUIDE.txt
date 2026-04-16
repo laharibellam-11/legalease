@@ -1,0 +1,132 @@
+========================================================================
+             LEGALEASE-AI: SYSTEM ARCHITECTURE & VIVA GUIDE
+========================================================================
+
+1. SYSTEM OVERVIEW (THE BIG PICTURE)
+------------------------------------
+Goal: LegalEase-AI is an intelligent legal assistant that specializes in 
+"Legal Landmine Detection." Its primary purpose is to identify 
+high-risk clauses and provide a contextual chat interface grounded in 
+the document's reality.
+
+Component Interaction:
+- Frontend (React/Vite): Captures documents and displays risk data.
+- Backend (FastAPI): Manages database, auth, and AI orchestration.
+- AI Core (Dual-Engine): Combines Rule-Based and Semantic AI (Legal-BERT).
+
+---
+
+2. END-TO-END WORKFLOW
+-----------------------
+
+Step 1: User Upload
+- What happens: The user uploads a legal PDF. 
+- Internals: Axios sends the file to the /upload endpoint.
+- Technologies: React FileUploader, Axios.
+
+Step 2: Backend Processing & Auth
+- What happens: FastAPI validates the user's JWT (JSON Web Token).
+- Internals: The file is assigned a UUID, stored, and a record is 
+  created in MongoDB via Beanie.
+- Output: A new database entry with "processing" status.
+
+Step 3: Text Extraction
+- What happens: Raw text is obtained from the PDF.
+- Internals: PyMuPDF or similar extracts text page-by-page.
+- Output: Structured raw text string with a page index.
+
+Step 4: Preprocessing (Chunking)
+- What happens: Text is cleaned and "chunked."
+- Why: LLM context windows are limited. Chunking breaks large docs into 
+  manageable pieces (e.g., 1000 chars) for efficient search.
+
+Step 5: Clause Extraction
+- What happens: Identifies sections like Indemnity, Termination, etc.
+- Internals: Hybrid Method. Regex for headers + Legal-BERT for semantic 
+  classification of text blocks.
+- Output: Structured list of extracted clauses.
+
+Step 6: Risk Analysis (THE CORE)
+Dual-Engine Architecture (v8):
+- Rule-Based Engine (60% Weight): Presence checks (missing clauses) 
+  and 15+ regex logic stress tests (e.g., unfair termination).
+- Semantic Engine (40% Weight): Legal-BERT analysis of language for 
+  "unfairness" or deviation from industry standards.
+- Final Scoring: (0.6 * RuleScore) + (0.4 * SemanticScore). 
+  Maps to High/Medium/Low levels.
+
+Step 7: Embeddings & Vector Store
+- What happens: Text chunks are converted into numerical arrays (vectors).
+- Internals: Embeddings capture semantic meaning. Stored in a Vector DB 
+  (Qdrant/Local) for Retrieval.
+
+Step 8: RAG Chatbot Workflow
+- Process: User Query → Embedding → Similarity Search → Retrieval of 
+  relevant context → Generation by Gemini.
+- Hallucination Prevention: AI is strictly grounded in the retrieved text.
+
+Step 9: SSOT (Single Source of Truth)
+- Interaction: Risk results are saved once and reused by Dashboard, 
+  Analysis UI, and Chatbot for perfect consistency.
+
+Step 10: Report Generation
+- What happens: Compiling summaries into a professional doc.
+- Technologies: jsPDF (for PDF) and Blob API (for TXT).
+
+---
+
+3. INTERNAL DATA FLOW
+----------------------
+User → React → FastAPI → MongoDB → Services → Legal-BERT/Gemini → 
+Vector DB → Response → UI.
+
+---
+
+4. METHODOLOGY (HYBRID AI)
+---------------------------
+Why Hybrid? 
+- Pure LLMs can hallucinate. 
+- Rules are reliable but literal.
+- Hybrid approach (Rules + BERT) ensures safety (rules) and 
+  intelligence (nuance).
+
+---
+
+5. DESIGN DECISIONS & JUSTIFICATIONS
+-------------------------------------
+- FastAPI: High-performance async handling for uploads.
+- MongoDB: Flexible schema for varying legal structures.
+- Legal-BERT: Trained specifically on legal text (specialist lawyer).
+- Gemini: Huge context window for deep document reasoning.
+- Vector DB: Enables semantic search (meaning over keywords).
+
+---
+
+6. SYSTEM STRENGTHS
+-------------------
+- Accuracy: 60/40 weighted engine catches missing mandatory clauses.
+- Transparency: Every risk flag cites a specific Page and Section.
+- Performance: Async background tasks for multi-document processing.
+
+---
+
+7. LIMITATIONS (FOR VIVA)
+-------------------------
+- Jurisdiction: Lacks specific fine-tuning for local Indian Stamp Acts.
+- Heuristics: Risk score is a numerical interpretation, not a legal certainty.
+- No Human Validation: Designed for review assistance, not to replace 
+  a qualified legal opinion.
+
+---
+
+8. SIMPLE ANALOGY
+-----------------
+Think of LegalEase-AI as a Digital X-Ray for Contracts.
+- Text Extraction is the patient lying on the table.
+- Legal-BERT is the radiologist looking for subtle fractures.
+- The Rule Engine checks if all bones are present.
+- The Chatbot is the doctor explaining the results to you.
+
+========================================================================
+Generated for: LegalEase-AI Viva Preparation
+========================================================================
